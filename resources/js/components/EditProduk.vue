@@ -1,0 +1,113 @@
+<template>
+   <div class="container">
+        <h2 class="text-center p-2 text-white bg-info mt-5">Edit Produk</h2>
+
+        <div class="card-body">
+            <div class="col-md-6 offset-md-3">
+                <form id="validateForm" @submit.prevent="UpdateProduk" enctype="multipart/form-data" novalidate >
+                    <div class="alert alert-danger" v-if="errors.length">
+                        <ul class="mb-0">
+                            <li v-for="(error, index) in errors" :key="index">
+                                {{ error }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="nama" v-model="produk.nama" class="form-control" placeholder="Masukkan Nama Produk">
+                    </div><br>
+
+                    <div class="form-group">
+                        <input type="number" id="harga" v-model="produk.harga" class="form-control" placeholder="Masukkan Harga Produk">
+                    </div><br>
+
+                    <div class="form-group">
+                        <input type="number" id="jumlah" v-model="produk.jumlah" class="form-control" placeholder="Masukkan Jumlah Produk">
+                    </div><br>
+                    <div class="form-group" v-if="produk.image">
+                        <img :src="`${url + '/'+produk.image}`" alt="image" width="150" height="100">
+                         <input type="hidden" name="image2" id="image2" v-model="produk.image">
+                    </div><br>
+                    <div class="custom-file">
+                        <input type="file" name="image" class="custom-file-input" id="validatedCustomFile" v-on:change="Changeimage">
+                    </div><br>
+
+                    <button class="btn btn-primary mt-4">Simpan</button>
+                    
+                </form>
+            </div>
+        </div>
+   </div>
+</template>
+
+<script>
+export default {
+        data(){
+            return{
+                url:document.head.querySelector('meta[name="url"]').content,
+                produk:{},
+                nama:'',
+                harga:'',
+                jumlah:'',
+                errors: []
+            }
+        },
+        methods:{
+           loadData(){
+               let url = this.url + `/api/get_produks/${this.$route.params.id}`;
+               this.axios.get(url).then(response =>{
+                   this.produk = response.data;
+                   console.log(this.produk);
+               })
+           },
+           UpdateProduk(){
+                
+                this.errors = [];
+                if(!this.produk.nama){
+                    this.errors.push('Nama Wajib Di isi');
+                }
+                if(!this.produk.harga){
+                    this.errors.push('Harga Wajib Di isi');
+                }
+                if(!this.produk.jumlah){
+                    this.errors.push('Jumlah Wajib Di isi');
+                }
+
+                if(!this.errors.length){
+                    let formData = new FormData();
+                    formData.append('nama', this.produk.nama);
+                    formData.append('harga', this.produk.harga);
+                    formData.append('jumlah', this.produk.jumlah);
+                    formData.append('image2', this.produk.image);
+                    formData.append('image', this.image);
+                    
+
+                    let url = this.url + `/api/UpdateProduk/${this.$route.params.id}`;
+                    this.axios.post(url, formData).then((response)=>{
+                        if(response.status){
+                                this.$utils.showSuccess('success',response.message);
+                        }else{
+                            this.$utils.showError('error',response.message);
+                        }
+                    }).catch(error=>{
+                        this.errors.push(error.response.data.error);
+                    }); 
+                }               
+            },
+            Changeimage(e){
+                this.image = e.target.files[0];
+                console.log(this.image);
+            }
+        },
+        created(){
+            this.loadData();
+        },
+        mounted:function(){
+            console.log('Ubah Produk Dimuat');
+        }
+
+}
+</script>
+
+<style>
+
+</style>
